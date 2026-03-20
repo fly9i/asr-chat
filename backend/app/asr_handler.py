@@ -51,15 +51,17 @@ class ASRSessionCallback(RecognitionCallback):
             return
         text = sentence["text"]
         is_end = RecognitionResult.is_sentence_end(sentence)
-        if is_end:
-            self._sentence_id += 1
         msg_type = "final" if is_end else "partial"
-        logger.info("[ASR %s] sentence_id=%d text=%s", msg_type, self._sentence_id, text)
+        logger.info("[ASR %s] sentence_id=%d text=%s sentence=%s",
+                     msg_type, self._sentence_id, text, sentence)
         self._enqueue({
             "type": msg_type,
             "text": text,
             "sentence_id": self._sentence_id,
         })
+        # 先发送再递增，确保同一句话的 partial 和 final 使用相同的 sentence_id
+        if is_end:
+            self._sentence_id += 1
 
 
 class ASRSession:
