@@ -6,6 +6,7 @@ from typing import Optional
 import dashscope
 from dashscope.audio.asr import Recognition, RecognitionCallback, RecognitionResult
 from fastapi import WebSocket
+from starlette.websockets import WebSocketDisconnect, WebSocketState
 
 from app.config import (
     DASHSCOPE_API_KEY,
@@ -52,8 +53,10 @@ class ASRSessionCallback(RecognitionCallback):
         is_end = RecognitionResult.is_sentence_end(sentence)
         if is_end:
             self._sentence_id += 1
+        msg_type = "final" if is_end else "partial"
+        logger.info("[ASR %s] sentence_id=%d text=%s", msg_type, self._sentence_id, text)
         self._enqueue({
-            "type": "final" if is_end else "partial",
+            "type": msg_type,
             "text": text,
             "sentence_id": self._sentence_id,
         })
@@ -67,6 +70,8 @@ class ASRSession:
         self._send_queue: asyncio.Queue = asyncio.Queue()
         self._callback: Optional[ASRSessionCallback] = None
         self._started = False
+        self._audio_frame_count = 0
+        self._audio_byte_count = 0
 
     async def start(self):
         loop = asyncio.get_running_loop()
@@ -77,17 +82,25 @@ class ASRSession:
             sample_rate=ASR_SAMPLE_RATE,
             callback=self._callback,
         )
-        # start() 会在内部启动与 DashScope 的 WebSocket 连接（阻塞调用）
+        logger.info("ASR session starting... model=%s format=%s sample_rate=%d",
+                     ASR_MODEL, ASR_FORMAT, ASR_SAMPLE_RATE)
         await loop.run_in_executor(None, self._recognition.start)
         self._started = True
         logger.info("ASR session started")
 
     def send_audio(self, audio_data: bytes):
         if self._recognition and self._started:
+            self._audio_frame_count += 1
+            self._audio_byte_count += len(audio_data)
+            if self._audio_frame_count % 50 == 1:
+                logger.info("[Audio] frame #%d, this=%d bytes, total=%d bytes",
+                            self._audio_frame_count, len(audio_data), self._audio_byte_count)
             self._recognition.send_audio_frame(audio_data)
 
     async def stop(self):
         if self._recognition and self._started:
+            logger.info("[Audio] 总计发送 %d 帧, %d 字节",
+                        self._audio_frame_count, self._audio_byte_count)
             loop = asyncio.get_running_loop()
             await loop.run_in_executor(None, self._recognition.stop)
             self._started = False
@@ -104,18 +117,28 @@ async def handle_asr_websocket(ws: WebSocket):
     - 将识别结果实时推送给客户端
     """
     await ws.accept()
+    logger.info("客户端 WebSocket 已连接")
     session = ASRSession()
+    client_disconnected = False
 
     async def send_results():
         """持续从队列中读取 ASR 结果并推送给客户端。"""
+        nonlocal client_disconnected
         try:
             while True:
                 msg = await session.message_queue.get()
+                if client_disconnected or ws.client_state != WebSocketState.CONNECTED:
+                    logger.info("[Send] 客户端已断开，丢弃消息: %s", msg.get("type"))
+                    if msg.get("type") == "asr_complete":
+                        break
+                    continue
+                logger.info("[Send] 推送消息: type=%s text=%s", msg.get("type"), msg.get("text", "")[:50])
                 await ws.send_json(msg)
                 if msg.get("type") == "asr_complete":
                     break
-        except Exception:
-            logger.exception("发送结果时出错")
+        except (WebSocketDisconnect, RuntimeError):
+            logger.info("[Send] 客户端断开连接，停止发送")
+            client_disconnected = True
 
     sender_task = None
     try:
@@ -125,27 +148,34 @@ async def handle_asr_websocket(ws: WebSocket):
         while True:
             data = await ws.receive()
             if data.get("type") == "websocket.disconnect":
+                logger.info("客户端主动断开连接")
+                client_disconnected = True
                 break
             if "bytes" in data:
                 session.send_audio(data["bytes"])
             elif "text" in data:
-                msg = json.loads(data["text"])
+                text_data = data["text"]
+                logger.info("[Recv] 收到文本消息: %s", text_data[:200])
+                msg = json.loads(text_data)
                 if msg.get("action") == "stop":
+                    logger.info("收到停止指令")
                     break
                 if msg.get("action") == "execute_command":
-                    # 将指令文本存入队列，由后续模块处理
                     command_text = msg.get("text", "")
+                    logger.info("[Command] 执行指令: %s", command_text)
                     await ws.send_json({
                         "type": "command_status",
                         "status": "thinking",
                         "content": f"收到指令: {command_text}",
                     })
-                    # TODO: 接入 AI 模型处理指令
                     await ws.send_json({
                         "type": "command_result",
                         "status": "result",
                         "content": f"指令处理完成: {command_text}",
                     })
+    except WebSocketDisconnect:
+        logger.info("客户端断开连接 (WebSocketDisconnect)")
+        client_disconnected = True
     except Exception:
         logger.exception("WebSocket 会话异常")
     finally:
@@ -156,3 +186,4 @@ async def handle_asr_websocket(ws: WebSocket):
                 await sender_task
             except asyncio.CancelledError:
                 pass
+        logger.info("WebSocket 会话清理完成")

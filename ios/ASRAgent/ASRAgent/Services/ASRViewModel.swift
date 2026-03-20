@@ -1,5 +1,8 @@
 import Foundation
 import SwiftUI
+import os
+
+private let vmLog = Logger(subsystem: "com.asragent.app", category: "ViewModel")
 
 /// 核心 ViewModel，串联录音、WebSocket、UI 状态
 @MainActor
@@ -34,6 +37,7 @@ class ASRViewModel: ObservableObject {
 
         // WebSocket 消息 → UI 更新
         wsManager.onMessage = { [weak self] msg in
+            vmLog.info("[消息] type=\(msg.type) text=\(msg.text.prefix(50)) sentenceId=\(msg.sentenceId)")
             self?.handleASRMessage(msg)
         }
     }
@@ -41,18 +45,22 @@ class ASRViewModel: ObservableObject {
     // MARK: - 录音控制
 
     func startRecording() {
+        vmLog.info("开始录音流程")
         sentences = []
         currentCommand = nil
         isCommandMode = false
         wsManager.connect()
         // 等连接建立后再开始录音
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-            self?.recorder.startRecording()
-            self?.appState = .recording
+            guard let self else { return }
+            vmLog.info("WebSocket isConnected=\(self.wsManager.isConnected), 开始录音")
+            self.recorder.startRecording()
+            self.appState = .recording
         }
     }
 
     func stopRecording() {
+        vmLog.info("停止录音, sentences=\(self.sentences.count)")
         recorder.stopRecording()
         if isCommandMode {
             endCommand()
@@ -69,17 +77,19 @@ class ASRViewModel: ObservableObject {
         isCommandMode = true
         commandSentenceStartId = (sentences.last?.id ?? 0) + 1
         currentCommand = CommandRecord(commandText: "")
+        vmLog.info("进入指令模式, startId=\(self.commandSentenceStartId)")
     }
 
     func endCommand() {
         guard isCommandMode else { return }
         isCommandMode = false
 
-        // 收集指令期间的文本
         let commandText = sentences
             .filter { $0.id >= commandSentenceStartId && $0.isFinal }
             .map { $0.text }
             .joined()
+
+        vmLog.info("结束指令模式, commandText=\(commandText.prefix(100))")
 
         if !commandText.isEmpty {
             currentCommand?.commandText = commandText
@@ -94,6 +104,7 @@ class ASRViewModel: ObservableObject {
         case "partial":
             updateSentence(id: msg.sentenceId, text: msg.text, isFinal: false)
         case "final":
+            vmLog.info("[Final] sentenceId=\(msg.sentenceId) text=\(msg.text.prefix(80))")
             updateSentence(id: msg.sentenceId, text: msg.text, isFinal: true)
         case "command_status":
             let step = CommandStep(status: msg.status, content: msg.content)
@@ -104,11 +115,11 @@ class ASRViewModel: ObservableObject {
             currentCommand?.finalResult = msg.content
             currentCommand?.isComplete = true
         case "error":
-            print("ASR 错误: \(msg.text)")
+            vmLog.error("ASR 错误: \(msg.text)")
         case "asr_complete":
-            break
+            vmLog.info("ASR 识别完成")
         default:
-            break
+            vmLog.warning("未知消息类型: \(msg.type)")
         }
     }
 
@@ -127,7 +138,6 @@ class ASRViewModel: ObservableObject {
     private func saveToHistory() {
         let finalText = sentences.filter { $0.isFinal }.map { $0.text }.joined()
         if finalText.isEmpty { return }
-        // 本地记录（服务端也可存储）
         let item = HistoryItem(
             id: Int(Date().timeIntervalSince1970),
             sessionId: UUID().uuidString,
@@ -137,6 +147,7 @@ class ASRViewModel: ObservableObject {
             createdAt: ISO8601DateFormatter().string(from: Date())
         )
         history.insert(item, at: 0)
+        vmLog.info("保存历史记录, text=\(finalText.prefix(50))")
     }
 
     func loadHistory() {
