@@ -44,11 +44,13 @@ class ASRViewModel: ObservableObject {
 
     // MARK: - 录音控制
 
-    func startRecording() {
-        vmLog.info("开始录音流程")
-        sentences = []
-        currentCommand = nil
-        isCommandMode = false
+    func startRecording(resume: Bool = false) {
+        vmLog.info("开始录音流程, resume=\(resume)")
+        if !resume {
+            sentences = []
+            currentCommand = nil
+            isCommandMode = false
+        }
         wsManager.connect()
         // 等连接建立后再开始录音
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
@@ -68,7 +70,15 @@ class ASRViewModel: ObservableObject {
         wsManager.sendAction(ClientAction(action: "stop"))
         wsManager.disconnect()
         appState = .idle
+    }
+
+    /// 结束本次任务，保存历史并重置状态
+    func finishSession() {
+        vmLog.info("结束任务, sentences=\(self.sentences.count)")
         saveToHistory()
+        sentences = []
+        currentCommand = nil
+        isCommandMode = false
     }
 
     // MARK: - 指令模式

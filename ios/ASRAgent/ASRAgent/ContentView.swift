@@ -170,20 +170,42 @@ struct ControlBarView: View {
         HStack(spacing: 16) {
             switch viewModel.appState {
             case .idle:
-                Spacer()
-                Button(action: { viewModel.startRecording() }) {
-                    Label(
-                        viewModel.sentences.isEmpty ? "开始录音" : "继续录音",
-                        systemImage: "mic.fill"
-                    )
-                    .font(.headline)
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 32)
-                    .padding(.vertical, 14)
-                    .background(.red)
-                    .clipShape(Capsule())
+                if viewModel.sentences.isEmpty {
+                    // 初始状态：只显示开始录音
+                    Spacer()
+                    Button(action: { viewModel.startRecording() }) {
+                        Label("开始录音", systemImage: "mic.fill")
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 32)
+                            .padding(.vertical, 14)
+                            .background(.red)
+                            .clipShape(Capsule())
+                    }
+                    Spacer()
+                } else {
+                    // 暂停状态：显示继续录音 + 结束任务
+                    Button(action: { viewModel.finishSession() }) {
+                        Label("结束任务", systemImage: "checkmark.circle.fill")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 12)
+                            .background(.gray)
+                            .clipShape(Capsule())
+                    }
+                    Spacer()
+                    Button(action: { viewModel.startRecording(resume: true) }) {
+                        Label("继续录音", systemImage: "mic.fill")
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 32)
+                            .padding(.vertical, 14)
+                            .background(.red)
+                            .clipShape(Capsule())
+                    }
                 }
-                Spacer()
 
             case .recording:
                 // 停止录音按钮（左侧）
