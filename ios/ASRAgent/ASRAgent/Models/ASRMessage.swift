@@ -3,16 +3,25 @@ import Foundation
 /// 从服务端接收的 WebSocket 消息
 struct ASRMessage: Codable, Identifiable {
     let type: String        // partial | final | command_status | command_result | error | asr_complete
-    var text: String = ""
-    var sentenceId: Int = 0
-    var status: String = ""
-    var content: String = ""
+    var text: String
+    var sentenceId: Int
+    var status: String
+    var content: String
 
     var id: String { "\(type)_\(sentenceId)_\(text.prefix(20))" }
 
     enum CodingKeys: String, CodingKey {
         case type, text, status, content
         case sentenceId = "sentence_id"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        type = try container.decode(String.self, forKey: .type)
+        text = try container.decodeIfPresent(String.self, forKey: .text) ?? ""
+        sentenceId = try container.decodeIfPresent(Int.self, forKey: .sentenceId) ?? 0
+        status = try container.decodeIfPresent(String.self, forKey: .status) ?? ""
+        content = try container.decodeIfPresent(String.self, forKey: .content) ?? ""
     }
 }
 
