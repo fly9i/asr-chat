@@ -5,6 +5,11 @@
     <key>NSMicrophoneUsageDescription</key>
     <string>ASR Agent 需要使用麦克风进行语音识别</string>
     <key>NSLocalNetworkUsageDescription</key>
-    <string>ASR Agent 需要连接本地服务器进行语音识别</string>
+    <string>ASR Agent 需要连接本地服务器进行语音识别和指令执行</string>
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key>
+        <true/>
+    </dict>
 </dict>
 </plist>

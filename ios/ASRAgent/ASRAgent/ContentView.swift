@@ -9,32 +9,34 @@ struct ContentView: View {
                 Color(.systemGroupedBackground).ignoresSafeArea()
 
                 VStack(spacing: 0) {
-                    // 上部：历史记录 / 识别结果 / 指令执行状态
                     ScrollViewReader { proxy in
                         ScrollView {
                             LazyVStack(alignment: .leading, spacing: 12) {
-                                if viewModel.appState == .idle && viewModel.sentences.isEmpty {
+                                if viewModel.appState == .idle && viewModel.sentences.isEmpty && viewModel.chatEvents.isEmpty {
                                     HistoryListView(history: viewModel.history)
                                 } else {
-                                    RecognitionResultView(
-                                        sentences: viewModel.sentences,
-                                        commandRecord: viewModel.currentCommand
-                                    )
+                                    RecognitionResultView(sentences: viewModel.sentences)
+
+                                    // Chat 事件展示
+                                    if !viewModel.chatEvents.isEmpty {
+                                        ChatEventsView(events: viewModel.chatEvents, isBusy: viewModel.isChatBusy)
+                                    }
                                 }
+
+                                Color.clear.frame(height: 1).id("bottom")
                             }
                             .padding()
-                            .id("content")
                         }
                         .onChange(of: viewModel.sentences.count) {
-                            withAnimation {
-                                proxy.scrollTo("content", anchor: .bottom)
-                            }
+                            withAnimation { proxy.scrollTo("bottom") }
+                        }
+                        .onChange(of: viewModel.chatEvents.count) {
+                            withAnimation { proxy.scrollTo("bottom") }
                         }
                     }
 
                     Divider()
 
-                    // 下部：控制按钮区域
                     ControlBarView(viewModel: viewModel)
                         .padding(.horizontal)
                         .padding(.vertical, 12)
@@ -43,6 +45,17 @@ struct ContentView: View {
             }
             .navigationTitle("ASR Agent")
             .navigationBarTitleDisplayMode(.inline)
+            // 权限确认弹窗
+            .alert("权限确认", isPresented: Binding(
+                get: { viewModel.pendingConfirm != nil },
+                set: { if !$0 { viewModel.pendingConfirm = nil } }
+            )) {
+                Button("允许") { viewModel.respondToConfirm(response: "once") }
+                Button("始终允许") { viewModel.respondToConfirm(response: "always") }
+                Button("拒绝", role: .destructive) { viewModel.respondToConfirm(response: "reject") }
+            } message: {
+                Text(viewModel.pendingConfirm?.confirmMessage ?? "")
+            }
         }
         .onAppear {
             viewModel.loadHistory()
@@ -94,69 +107,91 @@ struct HistoryListView: View {
 
 struct RecognitionResultView: View {
     let sentences: [RecognizedSentence]
-    let commandRecord: CommandRecord?
 
     var body: some View {
-        // 实时识别文本
         ForEach(sentences) { sentence in
             Text(sentence.text)
                 .font(.body)
                 .foregroundStyle(sentence.isFinal ? .primary : .secondary)
                 .padding(.vertical, 2)
         }
+    }
+}
 
-        // 指令执行过程
-        if let command = commandRecord, !command.steps.isEmpty {
-            Divider().padding(.vertical, 8)
+// MARK: - Chat 事件展示
 
-            VStack(alignment: .leading, spacing: 8) {
-                Text("指令执行")
-                    .font(.headline)
+struct ChatEventsView: View {
+    let events: [ChatDisplayItem]
+    let isBusy: Bool
 
-                ForEach(command.steps) { step in
-                    HStack(alignment: .top, spacing: 8) {
-                        Image(systemName: iconForStatus(step.status))
-                            .foregroundStyle(colorForStatus(step.status))
-                            .frame(width: 20)
-                        Text(step.content)
-                            .font(.callout)
-                    }
-                }
+    var body: some View {
+        Divider().padding(.vertical, 8)
 
-                if command.isComplete {
-                    HStack {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(.green)
-                        Text("执行完成")
-                            .font(.callout)
-                            .fontWeight(.medium)
-                    }
+        VStack(alignment: .leading, spacing: 10) {
+            Text("指令执行")
+                .font(.headline)
+
+            ForEach(events) { item in
+                chatItemView(item)
+            }
+
+            if isBusy {
+                HStack(spacing: 8) {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text("处理中...")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
                 }
             }
-            .padding(12)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+
+    @ViewBuilder
+    private func chatItemView(_ item: ChatDisplayItem) -> some View {
+        switch item.type {
+        case .thinking:
+            HStack(alignment: .top, spacing: 8) {
+                Image(systemName: "brain")
+                    .foregroundStyle(.purple)
+                    .frame(width: 20)
+                Text(item.content)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .italic()
+            }
+
+        case .text:
+            Text(item.content)
+                .font(.body)
+                .textSelection(.enabled)
+
+        case .tool:
+            HStack(alignment: .top, spacing: 8) {
+                Image(systemName: "wrench.and.screwdriver")
+                    .foregroundStyle(.orange)
+                    .frame(width: 20)
+                Text(item.content)
+                    .font(.callout.monospaced())
+                    .lineLimit(10)
+            }
+            .padding(8)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color(.secondarySystemGroupedBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 10))
-        }
-    }
+            .background(Color(.systemGray6))
+            .clipShape(RoundedRectangle(cornerRadius: 6))
 
-    private func iconForStatus(_ status: String) -> String {
-        switch status {
-        case "thinking": return "brain"
-        case "tool_call": return "wrench.and.screwdriver"
-        case "skill": return "sparkles"
-        case "result": return "checkmark.circle"
-        default: return "circle"
-        }
-    }
-
-    private func colorForStatus(_ status: String) -> Color {
-        switch status {
-        case "thinking": return .purple
-        case "tool_call": return .orange
-        case "skill": return .blue
-        case "result": return .green
-        default: return .secondary
+        case .subtask:
+            HStack(alignment: .top, spacing: 8) {
+                Image(systemName: "arrow.triangle.branch")
+                    .foregroundStyle(.blue)
+                    .frame(width: 20)
+                Text(item.content)
+                    .font(.callout)
+            }
         }
     }
 }
@@ -170,8 +205,7 @@ struct ControlBarView: View {
         HStack(spacing: 16) {
             switch viewModel.appState {
             case .idle:
-                if viewModel.sentences.isEmpty {
-                    // 初始状态：只显示开始录音
+                if viewModel.sentences.isEmpty && viewModel.chatEvents.isEmpty {
                     Spacer()
                     Button(action: { viewModel.startRecording() }) {
                         Label("开始录音", systemImage: "mic.fill")
@@ -184,7 +218,6 @@ struct ControlBarView: View {
                     }
                     Spacer()
                 } else {
-                    // 暂停状态：显示继续录音 + 结束任务
                     Button(action: { viewModel.finishSession() }) {
                         Label("结束任务", systemImage: "checkmark.circle.fill")
                             .font(.subheadline)
@@ -208,19 +241,16 @@ struct ControlBarView: View {
                 }
 
             case .recording:
-                // 停止录音按钮（左侧）
                 Button(action: { viewModel.stopRecording() }) {
                     Image(systemName: "stop.circle.fill")
                         .font(.system(size: 44))
                         .foregroundStyle(.red)
                 }
 
-                // 录音动画指示
                 RecordingIndicator()
 
                 Spacer()
 
-                // 指令按钮（右侧）
                 if viewModel.isCommandMode {
                     Button(action: { viewModel.endCommand() }) {
                         Text("开始执行")

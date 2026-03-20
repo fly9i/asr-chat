@@ -13,6 +13,8 @@
 		A10004 /* WebSocketManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10004; };
 		A10005 /* AudioRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10005; };
 		A10006 /* ASRViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10006; };
+		A10007 /* ChatEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10008; };
+		A10008 /* ChatService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10009; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -23,6 +25,8 @@
 		B10005 /* AudioRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRecorder.swift; sourceTree = "<group>"; };
 		B10006 /* ASRViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ASRViewModel.swift; sourceTree = "<group>"; };
 		B10007 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B10008 /* ChatEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatEvent.swift; sourceTree = "<group>"; };
+		B10009 /* ChatService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatService.swift; sourceTree = "<group>"; };
 		C10001 /* ASRAgent.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ASRAgent.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -61,6 +65,7 @@
 			isa = PBXGroup;
 			children = (
 				B10003 /* ASRMessage.swift */,
+				B10008 /* ChatEvent.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -71,6 +76,7 @@
 				B10004 /* WebSocketManager.swift */,
 				B10005 /* AudioRecorder.swift */,
 				B10006 /* ASRViewModel.swift */,
+				B10009 /* ChatService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -152,6 +158,8 @@
 				A10004 /* WebSocketManager.swift in Sources */,
 				A10005 /* AudioRecorder.swift in Sources */,
 				A10006 /* ASRViewModel.swift in Sources */,
+				A10007 /* ChatEvent.swift in Sources */,
+				A10008 /* ChatService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
