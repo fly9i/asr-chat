@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+*.db
+
+# Environment
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# iOS
+ios/ASRAgent.xcodeproj/xcuserdata/
+ios/ASRAgent.xcodeproj/project.xcworkspace/xcuserdata/
+DerivedData/
+*.xcuserstate
+*.ipa
+
+# OS
+.DS_Store
+Thumbs.db
