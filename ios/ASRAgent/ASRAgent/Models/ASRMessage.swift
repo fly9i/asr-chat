@@ -32,7 +32,7 @@ struct RecognizedSentence: Identifiable {
 /// 指令执行记录
 struct CommandRecord: Identifiable {
     let id = UUID()
-    let commandText: String
+    var commandText: String
     var steps: [CommandStep] = []
     var finalResult: String = ""
     var isComplete: Bool = false
