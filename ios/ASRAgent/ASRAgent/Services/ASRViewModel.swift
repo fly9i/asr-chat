@@ -94,12 +94,13 @@ class ASRViewModel: ObservableObject {
         guard isCommandMode else { return }
         isCommandMode = false
 
+        // 收集指令期间的所有文本（包括尚未 final 的 partial）
         let commandText = sentences
-            .filter { $0.id >= commandSentenceStartId && $0.isFinal }
+            .filter { $0.id >= commandSentenceStartId }
             .map { $0.text }
             .joined()
 
-        vmLog.info("结束指令模式, commandText=\(commandText.prefix(100))")
+        vmLog.info("开始执行指令, commandText=\(commandText.prefix(100)), sentenceRange=\(self.commandSentenceStartId)...\(self.sentences.last?.id ?? -1)")
 
         if !commandText.isEmpty {
             currentCommand?.commandText = commandText

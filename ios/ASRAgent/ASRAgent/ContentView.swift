@@ -223,7 +223,7 @@ struct ControlBarView: View {
                 // 指令按钮（右侧）
                 if viewModel.isCommandMode {
                     Button(action: { viewModel.endCommand() }) {
-                        Text("指令结束")
+                        Text("开始执行")
                             .font(.subheadline)
                             .fontWeight(.semibold)
                             .foregroundStyle(.white)
