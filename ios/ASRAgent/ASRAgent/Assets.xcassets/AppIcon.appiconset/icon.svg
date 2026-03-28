@@ -1,0 +1,156 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="50%" stop-color="#16213e"/>
+      <stop offset="100%" stop-color="#0f3460"/>
+    </linearGradient>
+    <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00d2ff"/>
+      <stop offset="50%" stop-color="#00b4d8"/>
+      <stop offset="100%" stop-color="#0077b6"/>
+    </linearGradient>
+    <linearGradient id="wingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06d6a0"/>
+      <stop offset="50%" stop-color="#0ead7b"/>
+      <stop offset="100%" stop-color="#08845e"/>
+    </linearGradient>
+    <linearGradient id="chestGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffd166"/>
+      <stop offset="100%" stop-color="#f4845f"/>
+    </linearGradient>
+    <linearGradient id="beakGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff6b6b"/>
+      <stop offset="100%" stop-color="#ee5a24"/>
+    </linearGradient>
+    <linearGradient id="tailGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff6b6b"/>
+      <stop offset="30%" stop-color="#ee5a24"/>
+      <stop offset="60%" stop-color="#f4845f"/>
+      <stop offset="100%" stop-color="#ffd166"/>
+    </linearGradient>
+    <linearGradient id="crestGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffd166"/>
+      <stop offset="100%" stop-color="#ff6b6b"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="45%" r="40%">
+      <stop offset="0%" stop-color="#00d2ff" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#00d2ff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="wave1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00d2ff" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#00d2ff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="wave2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06d6a0" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#06d6a0" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="wave3" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffd166" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#ffd166" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="224" fill="url(#bg)"/>
+
+  <!-- Subtle glow behind parrot -->
+  <ellipse cx="480" cy="470" rx="320" ry="300" fill="url(#glow)"/>
+
+  <!-- Sound waves from beak area -->
+  <path d="M 680 370 Q 720 340 740 370 Q 760 400 740 430" fill="none" stroke="url(#wave1)" stroke-width="6" stroke-linecap="round">
+    <animate attributeName="opacity" values="0.9;0.3;0.9" dur="2s" repeatCount="indefinite"/>
+  </path>
+  <path d="M 700 340 Q 760 290 790 340 Q 820 390 790 440 Q 760 490 700 450" fill="none" stroke="url(#wave2)" stroke-width="5" stroke-linecap="round">
+    <animate attributeName="opacity" values="0.7;0.2;0.7" dur="2s" begin="0.3s" repeatCount="indefinite"/>
+  </path>
+  <path d="M 720 310 Q 800 240 850 310 Q 900 380 850 460 Q 800 530 720 490" fill="none" stroke="url(#wave3)" stroke-width="4" stroke-linecap="round">
+    <animate attributeName="opacity" values="0.5;0.1;0.5" dur="2s" begin="0.6s" repeatCount="indefinite"/>
+  </path>
+
+  <!-- Tail feathers -->
+  <g filter="url(#shadow)">
+    <path d="M 360 620 Q 280 720 220 820 Q 260 790 310 750 Q 270 810 230 870 Q 300 830 370 770 Q 330 830 310 880 Q 370 840 420 770 Q 400 810 390 850 Q 430 800 460 730 L 460 640 Z" fill="url(#tailGrad)" opacity="0.95"/>
+  </g>
+
+  <!-- Body -->
+  <g filter="url(#shadow)">
+    <ellipse cx="460" cy="530" rx="130" ry="160" fill="url(#bodyGrad)"/>
+  </g>
+
+  <!-- Chest / belly -->
+  <ellipse cx="490" cy="560" rx="90" ry="120" fill="url(#chestGrad)"/>
+
+  <!-- Wing -->
+  <path d="M 380 450 Q 320 500 310 580 Q 320 640 360 680 Q 400 650 420 600 Q 430 550 440 500 Z" fill="url(#wingGrad)" opacity="0.9"/>
+  <path d="M 395 475 Q 345 520 340 590 Q 350 635 375 660 Q 400 640 415 600 Q 425 560 430 510 Z" fill="#0ead7b" opacity="0.5"/>
+
+  <!-- Neck -->
+  <ellipse cx="530" cy="400" rx="85" ry="110" fill="url(#bodyGrad)"/>
+
+  <!-- Head -->
+  <ellipse cx="570" cy="330" rx="85" ry="80" fill="url(#bodyGrad)"/>
+
+  <!-- Eye ring (white) -->
+  <circle cx="600" cy="315" r="22" fill="white"/>
+  <!-- Eye pupil -->
+  <circle cx="604" cy="315" r="14" fill="#1a1a2e"/>
+  <!-- Eye highlight -->
+  <circle cx="608" cy="310" r="5" fill="white" opacity="0.9"/>
+
+  <!-- Beak upper -->
+  <path d="M 635 325 Q 680 310 700 330 Q 680 340 635 340 Z" fill="url(#beakGrad)"/>
+  <!-- Beak lower -->
+  <path d="M 635 340 Q 675 345 690 350 Q 675 360 635 355 Z" fill="#d63031"/>
+
+  <!-- Crest feathers -->
+  <path d="M 560 260 Q 540 200 555 160 Q 570 200 580 250" fill="url(#crestGrad)" opacity="0.9"/>
+  <path d="M 575 255 Q 565 190 580 145 Q 595 195 595 248" fill="#ff6b6b" opacity="0.85"/>
+  <path d="M 590 258 Q 590 195 610 155 Q 615 200 605 255" fill="#ffd166" opacity="0.8"/>
+
+  <!-- Feather details on body -->
+  <ellipse cx="440" cy="490" rx="25" ry="12" fill="#0096c7" opacity="0.3" transform="rotate(-15 440 490)"/>
+  <ellipse cx="430" cy="530" rx="25" ry="12" fill="#0096c7" opacity="0.3" transform="rotate(-20 430 530)"/>
+  <ellipse cx="425" cy="570" rx="25" ry="12" fill="#0096c7" opacity="0.3" transform="rotate(-25 425 570)"/>
+
+  <!-- Feet -->
+  <g stroke="#f4845f" stroke-width="5" fill="none" stroke-linecap="round">
+    <path d="M 430 680 L 410 720 M 430 680 L 430 725 M 430 680 L 445 720"/>
+    <path d="M 490 680 L 470 720 M 490 680 L 490 725 M 490 680 L 505 720"/>
+  </g>
+
+  <!-- Branch -->
+  <path d="M 300 720 Q 420 705 550 710 Q 650 715 720 700" fill="none" stroke="#8B6914" stroke-width="12" stroke-linecap="round" opacity="0.7"/>
+  <path d="M 300 720 Q 420 708 550 713 Q 650 718 720 703" fill="none" stroke="#A0782C" stroke-width="7" stroke-linecap="round" opacity="0.5"/>
+
+  <!-- AI sparkles / digital particles -->
+  <g fill="#00d2ff" opacity="0.6">
+    <circle cx="680" cy="260" r="4">
+      <animate attributeName="opacity" values="0.6;0.1;0.6" dur="3s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="730" cy="290" r="3">
+      <animate attributeName="opacity" values="0.4;0.1;0.4" dur="2.5s" begin="0.5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="710" cy="230" r="3">
+      <animate attributeName="opacity" values="0.5;0.1;0.5" dur="2.8s" begin="1s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="750" cy="250" r="2">
+      <animate attributeName="opacity" values="0.5;0.1;0.5" dur="2.2s" begin="0.8s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <g fill="#ffd166" opacity="0.5">
+    <circle cx="290" cy="400" r="3">
+      <animate attributeName="opacity" values="0.5;0.1;0.5" dur="3.2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="270" cy="450" r="2">
+      <animate attributeName="opacity" values="0.4;0.1;0.4" dur="2.7s" begin="0.3s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="250" cy="380" r="2.5">
+      <animate attributeName="opacity" values="0.3;0.1;0.3" dur="2.4s" begin="0.7s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+</svg>
